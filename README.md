@@ -72,6 +72,15 @@ Safety behavior:
 - Dirty worktrees (with uncommitted changes) are skipped.
 - The leading workspace (main repository checkout) is never targeted.
 
+## Help
+
+Both functions support built-in help output:
+
+```zsh
+gwt --help
+gwc --help
+```
+
 ## Directory structure
 
 By default, worktrees are created in a sibling directory named `<repo>-trees`:

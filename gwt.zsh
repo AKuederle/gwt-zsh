@@ -2,9 +2,11 @@
 # Git worktree helpers:
 #   gwt <name> [from] [--root <path>]  -> creates worktree at <root>/<name>
 #                                       and creates new branch <name> from <from>/HEAD
+#   gwt --help                          -> show gwt help
 #   gwc <name> [--root <path>]         -> cd into <root>/<name>
 #   gwc --cleanup [-a|--all]           -> interactive cleanup of merged worktrees
 #                                         -a/--all: delete all merged+clean without prompt
+#   gwc --help                          -> show gwc help
 #
 # Default root: ../<projname>-trees where projname is the repo folder name.
 
@@ -157,6 +159,36 @@ __gwt_is_dirty() {
 # Usage: __gwt_last_commit_age <worktree_path>
 __gwt_last_commit_age() {
   git -C "$1" log -1 --format='%cr' 2>/dev/null || print "unknown"
+}
+
+__gwt_print_help() {
+  print -r -- "usage: gwt <name> [from] [--root <path>]"
+  print -r -- ""
+  print -r -- "Create a new worktree and branch, then cd into it."
+  print -r -- ""
+  print -r -- "Arguments:"
+  print -r -- "  <name>           Worktree and branch name"
+  print -r -- "  [from]           Base ref (default: HEAD)"
+  print -r -- ""
+  print -r -- "Options:"
+  print -r -- "  --root <path>    Worktree root directory"
+  print -r -- "  -h, --help       Show this help message"
+}
+
+__gwc_print_help() {
+  print -r -- "usage: gwc [name] [--root <path>]"
+  print -r -- "       gwc --cleanup [-a|--all]"
+  print -r -- ""
+  print -r -- "Change directory to an existing worktree, or clean up merged worktrees."
+  print -r -- ""
+  print -r -- "Arguments:"
+  print -r -- "  [name]           Existing worktree name; omit to jump to main repo"
+  print -r -- ""
+  print -r -- "Options:"
+  print -r -- "  --root <path>    Worktree root directory"
+  print -r -- "  -c, --cleanup    Interactive cleanup of merged worktrees"
+  print -r -- "  -a, --all        Delete all merged+clean worktrees (with --cleanup)"
+  print -r -- "  -h, --help       Show this help message"
 }
 
 # Cleanup worktrees interactively or automatically
@@ -322,6 +354,16 @@ __gwt_cleanup() {
 # gwt <name> [from] [--root <path>]
 gwt() {
   local name from dest branch_exists=0
+  local arg
+
+  for arg in "$@"; do
+    case "$arg" in
+      --help|-h)
+        __gwt_print_help
+        return 0
+        ;;
+    esac
+  done
 
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
     print -u2 "gwt: not inside a git repo"
@@ -382,8 +424,17 @@ gwt() {
 # gwc --cleanup [-a|--all]
 # gwc -c [-a|--all]
 gwc() {
-  local name dest gitdir
+  local name dest gitdir arg
   local cleanup=0 cleanup_all=""
+
+  for arg in "$@"; do
+    case "$arg" in
+      --help|-h)
+        __gwc_print_help
+        return 0
+        ;;
+    esac
+  done
 
   # Check for cleanup mode first
   local -a args
@@ -436,6 +487,7 @@ _gwt() {
   local -a opts
   opts=(
     '--root=[worktree root directory]:directory:_files -/'
+    '(-h --help)'{-h,--help}'[show help message]'
   )
 
   _arguments -s -S \
@@ -472,6 +524,7 @@ _gwc() {
     '--root=[worktree root directory]:directory:_files -/'
     '(-c --cleanup)'{-c,--cleanup}'[interactive cleanup of merged worktrees]'
     '(-a --all)'{-a,--all}'[delete all merged+clean worktrees without prompt]'
+    '(-h --help)'{-h,--help}'[show help message]'
   )
 
   _arguments -s -S \
