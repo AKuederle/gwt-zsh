@@ -54,6 +54,24 @@ gwc feature-x
 gwc
 ```
 
+## Deleting workspaces
+
+Use `gwc --cleanup` (or `gwc -c`) to delete merged and clean worktrees interactively.
+
+```zsh
+# Interactively select merged+clean worktrees to remove
+gwc --cleanup
+
+# Remove all merged+clean worktrees without prompt
+gwc --cleanup --all
+```
+
+Safety behavior:
+
+- Only worktrees whose branch is merged into the default branch are eligible.
+- Dirty worktrees (with uncommitted changes) are skipped.
+- The leading workspace (main repository checkout) is never targeted.
+
 ## Directory structure
 
 By default, worktrees are created in a sibling directory named `<repo>-trees`:
