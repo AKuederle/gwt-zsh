@@ -14,6 +14,10 @@ Git worktrees let you check out multiple branches simultaneously in separate dir
 ## Installation
 
 ```zsh
+# Install gum (required for `gwc --cleanup` interactive mode)
+# Arch Linux:
+sudo pacman -S gum
+
 # Clone to your zsh config directory
 git clone https://github.com/AKuederle/gwt-zsh.git ~/.zsh/gwt-zsh
 
