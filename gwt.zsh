@@ -101,6 +101,13 @@ __gwt_parse_root() {
   _GWT_REST=("${rest[@]}")
 }
 
+# Convert a branch/worktree logical name to a safe single-folder name.
+# We percent-escape slashes so names like feature/foo become feature%2Ffoo.
+__gwt_escape_name_for_folder() {
+  local name="$1"
+  print -r -- "${name//\//%2F}"
+}
+
 # Complete <from> with local branches + tags (good enough for most use)
 __gwt_complete_from() {
   local -a refs
@@ -353,7 +360,7 @@ __gwt_cleanup() {
 
 # gwt <name> [from] [--root <path>]
 gwt() {
-  local name from dest branch_exists=0
+  local name from dest folder_name branch_exists=0
   local arg
 
   for arg in "$@"; do
@@ -380,12 +387,14 @@ gwt() {
     return 2
   fi
 
+  folder_name="$(__gwt_escape_name_for_folder "$name")"
+
   if git show-ref --verify --quiet "refs/heads/$name"; then
     branch_exists=1
   fi
 
   mkdir -p -- "$_GWT_ROOT" || return 1
-  dest="${_GWT_ROOT}/${name}"
+  dest="${_GWT_ROOT}/${folder_name}"
 
   # Worktree already exists: just cd to it
   if [[ -d "$dest" ]] && git -C "$dest" rev-parse --git-dir >/dev/null 2>&1; then
@@ -424,7 +433,7 @@ gwt() {
 # gwc --cleanup [-a|--all]
 # gwc -c [-a|--all]
 gwc() {
-  local name dest gitdir arg
+  local name dest alt_dest gitdir arg
   local cleanup=0 cleanup_all=""
 
   for arg in "$@"; do
@@ -473,10 +482,14 @@ gwc() {
   fi
 
   dest="${_GWT_ROOT}/${name}"
-  [[ -d "$dest" ]] || {
-    print -u2 "gwc: not a directory: $dest"
-    return 1
-  }
+  if [[ ! -d "$dest" ]]; then
+    alt_dest="${_GWT_ROOT}/$(__gwt_escape_name_for_folder "$name")"
+    [[ -d "$alt_dest" ]] || {
+      print -u2 "gwc: not a directory: $dest"
+      return 1
+    }
+    dest="$alt_dest"
+  fi
 
   cd -- "$dest"
 }
